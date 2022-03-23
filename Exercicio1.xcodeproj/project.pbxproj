@@ -39,6 +39,7 @@
 		4B9EBAD427E8044E008ADE8C /* Exercicio1 */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Exercicio1; sourceTree = BUILT_PRODUCTS_DIR; };
 		4B9EBAD727E8044E008ADE8C /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
 		4B9EBADF27E804CE008ADE8C /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
+		4BE97F0827EB72D000D9E005 /* camera.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = camera.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -90,6 +91,7 @@
 				4B8FDB4A27E814D50018374A /* Shader.h */,
 				4B8FDB2E27E80F2E0018374A /* shaders */,
 				4B9EBAD727E8044E008ADE8C /* main.cpp */,
+				4BE97F0827EB72D000D9E005 /* camera.h */,
 			);
 			path = Exercicio1;
 			sourceTree = "<group>";
