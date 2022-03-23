@@ -20,6 +20,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
+int setupGeometry();
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -81,8 +82,63 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     
     // build and compile our shader zprogram
-    Shader ourShader("/Users/douglasimmig/Desktop/Exercicio1/Exercicio1/shaders/hello.vs", "/Users/douglasimmig/Desktop/Exercicio1/Exercicio1/shaders/hello.fs");
+    Shader ourShader("/Users/douglasimmig/Desktop/Exercicio1/Exercicio1/shaders/hello.vs",
+                     "/Users/douglasimmig/Desktop/Exercicio1/Exercicio1/shaders/hello.fs");
     
+    GLuint VAO = setupGeometry();
+    
+    // render loop
+    while (!glfwWindowShouldClose(window)) {
+        // per-frame time logic
+        float currentFrame = static_cast<float>(glfwGetTime());
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+        
+        // input
+        processInput(window);
+        
+        // render
+        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        
+        // activate shader
+        ourShader.use();
+        
+        // pass projection matrix to shader (note that in this case it could change every frame)
+        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        ourShader.setMat4("projection", projection);
+        
+        // camera/view transformation
+        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+        ourShader.setMat4("view", view);
+        
+        // render boxes
+        glBindVertexArray(VAO);
+        
+        // calculate the model matrix for each object and pass it to shader before drawing
+        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        float angle = 20.0f * 0;
+        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+        ourShader.setMat4("model", model);
+        
+        glDrawArrays(GL_TRIANGLES, 0, 36);
+        
+        glDrawArrays(GL_TRIANGLES, 0, 4);
+        
+        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+    
+    // optional: de-allocate all resources once they've outlived their purpose:
+    glDeleteVertexArrays(1, &VAO);
+    
+    // glfw: terminate, clearing all previously allocated GLFW resources.
+    glfwTerminate();
+    return 0;
+}
+
+int setupGeometry() {
     // set up vertex data (and buffer(s)) and configure vertex attributes
     float vertices[] = {
         -0.5f, -0.5f, -0.5f,
@@ -125,23 +181,23 @@ int main() {
         0.5f,  0.5f,  0.5f,
         0.5f,  0.5f,  0.5f,
         -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f
-    };
-    
-    unsigned int indices[] = {
-        0, 1, 3, // first triangle
-        1, 2, 3  // second triangle
-    };
-    
-    // world space positions of our cubes
-    glm::vec3 cubePositions[] = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
+        -0.5f,  0.5f, -0.5f,
+        
+        // positions          // texture coords
+        0.5f,  0.5f, 0.0f,   1.0f, 1.0f, // top right
+        0.5f, -0.5f, 0.0f,   1.0f, 0.0f, // bottom right
+        -0.5f, -0.5f, 0.0f,   0.0f, 0.0f, // bottom left
+        -0.5f,  0.5f, 0.0f,   0.0f, 1.0f  // top left
     };
     
     unsigned int VBO, VAO;
+    //Geração do identificador do VAO (Vertex Array Object)
     glGenVertexArrays(1, &VAO);
+    //Geração do identificador do VBO
     glGenBuffers(1, &VBO);
     
+    // Vincula (bind) o VAO primeiro, e em seguida  conecta e seta o(s) buffer(s) de vértices
+    // e os ponteiros para os atributos
     glBindVertexArray(VAO);
     
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -154,57 +210,7 @@ int main() {
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
     
-    // render loop
-    while (!glfwWindowShouldClose(window))
-    {
-        // per-frame time logic
-        float currentFrame = static_cast<float>(glfwGetTime());
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-        
-        // input
-        processInput(window);
-        
-        // render
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
-        // activate shader
-        ourShader.use();
-        
-        // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(fov), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-        ourShader.setMat4("projection", projection);
-        
-        // camera/view transformation
-        glm::mat4 view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        ourShader.setMat4("view", view);
-        
-        // render boxes
-        glBindVertexArray(VAO);
-        
-        // calculate the model matrix for each object and pass it to shader before drawing
-        glm::mat4 model = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        model = glm::translate(model, cubePositions[0]);
-        float angle = 20.0f * 0;
-        model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-        ourShader.setMat4("model", model);
-        
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-        
-        // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
-        // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
-    
-    // optional: de-allocate all resources once they've outlived their purpose:
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    
-    // glfw: terminate, clearing all previously allocated GLFW resources.
-    glfwTerminate();
-    return 0;
+    return VAO;
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
@@ -214,14 +220,52 @@ void processInput(GLFWwindow *window) {
         glfwSetWindowShouldClose(window, true);
     
     float cameraSpeed = static_cast<float>(2.5 * deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+    
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
         cameraPos += cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+    
+    if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
         cameraPos -= cameraSpeed * cameraFront;
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+    
+    if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
         cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+    
+    if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+    
+    if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS) {
+        cameraPos = glm::vec3(0.0f, 0.0f, 3.0f); //frente
+        cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS) {
+        cameraPos = glm::vec3(0.0f, 0.0f, -3.0f); //costas
+        cameraFront = glm::vec3(0.0f, 0.0f, 1.0f);
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS) {
+        cameraPos = glm::vec3(0.0f, 3.0f, 0.0f); //cima
+        cameraFront = glm::vec3(0.0f, -1.0f, 0.0f);
+        cameraUp = glm::vec3(-1.0f, 0.0f, 0.0f);
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS) {
+        cameraPos = glm::vec3(0.0f, -3.0f, 0.0f); //baixo
+        cameraFront = glm::vec3(0.0f, 1.0f, 0.0f);
+        cameraUp = glm::vec3(1.0f, 0.0f, 0.0f);
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_5) == GLFW_PRESS) {
+        cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        cameraPos = glm::vec3(3.0f, 0.0f, 0.0f); //direita
+        cameraFront = glm::vec3(-1.0f, 0.0f, 0.0f);
+    }
+    
+    if (glfwGetKey(window, GLFW_KEY_6) == GLFW_PRESS) {
+        cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+        cameraPos = glm::vec3(-3.0f, 0.0f, 0.0f); //esquerda
+        cameraFront = glm::vec3(1.0f, 0.0f, 0.0f);
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -248,7 +292,7 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     lastX = xpos;
     lastY = ypos;
     
-    float sensitivity = 0.1f; // change this value to your liking
+    float sensitivity = 0.02f; // change this value to your liking
     xoffset *= sensitivity;
     yoffset *= sensitivity;
     
@@ -268,7 +312,8 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn) {
     cameraFront = glm::normalize(front);
 }
 
-// glfw: whenever the mouse scroll wheel scrolls, this callback is called
+// glfw: whenever the mouse scroll wheel scrolls, this callback is called - zooming
+// fov - field of view
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     fov -= (float)yoffset;
